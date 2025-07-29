@@ -28,7 +28,7 @@ const LinearRegression = () => {
   const [learningRate, setLearningRate] = useState(0.01);
   
   const svgRef = useRef<SVGSVGElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
 
   const width = 600;
   const height = 400;

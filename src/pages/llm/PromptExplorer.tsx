@@ -46,8 +46,8 @@ const PromptExplorer = () => {
   const [showProbabilities, setShowProbabilities] = useState(true);
   const [comparisonMode, setComparisonMode] = useState(false);
 
-  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
-  const dimensionsRef = useRef<ChartDimensions>();
+  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
+  const dimensionsRef = useRef<ChartDimensions | null>(null);
 
   const promptTechniques: PromptTechnique[] = [
     {
@@ -370,7 +370,7 @@ const PromptExplorer = () => {
       chartGroup
         .append('g')
         .attr('transform', `translate(0, ${dimensions.innerHeight - 80})`)
-        .call(d3.axisBottom(xScale).tickFormat(d => (d * 100).toFixed(0) + '%'));
+        .call(d3.axisBottom(xScale).tickFormat(d => ((d as number) * 100).toFixed(0) + '%'));
 
       // Axis label
       chartGroup

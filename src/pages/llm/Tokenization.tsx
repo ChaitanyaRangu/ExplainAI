@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Type, Copy, RotateCcw, Download, Shuffle } from 'lucide-react';
 import VisualizationBase from '../../components/VisualizationBase';
@@ -19,6 +19,7 @@ const Tokenization = () => {
   const [tokens, setTokens] = useState<TokenInfo[]>([]);
   const [vocabulary, setVocabulary] = useState<Map<string, number>>(new Map());
   const [selectedToken, setSelectedToken] = useState<number | null>(null);
+  const [downloadStatus, setDownloadStatus] = useState<string>('');
 
   const tokenizeWord = (text: string): TokenInfo[] => {
     const words = text.split(/(\s+|[^\w\s])/g).filter(token => token.trim() !== '');
@@ -115,20 +116,36 @@ const Tokenization = () => {
   };
 
   const exportTokens = () => {
+    setDownloadStatus('Preparing download...');
+
     const data = {
       input: inputText,
       method: tokenizationMethod,
       tokens: tokens,
-      vocabulary: Array.from(vocabulary.entries())
+      vocabulary: Array.from(vocabulary.entries()),
+      timestamp: new Date().toISOString(),
+      stats: {
+        totalTokens: tokens.length,
+        uniqueTokens: vocabulary.size,
+        avgTokenLength: tokens.length > 0 ? (tokens.reduce((sum, t) => sum + t.text.length, 0) / tokens.length).toFixed(2) : '0'
+      }
     };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tokenization_result.json';
-    a.click();
-    URL.revokeObjectURL(url);
+
+    try {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tokenization_${tokenizationMethod}_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      setDownloadStatus('Download completed!');
+      setTimeout(() => setDownloadStatus(''), 3000);
+    } catch (error) {
+      setDownloadStatus('Download failed!');
+      setTimeout(() => setDownloadStatus(''), 3000);
+    }
   };
 
   const reset = () => {
@@ -225,9 +242,9 @@ const Tokenization = () => {
           Copy Tokens
         </button>
         
-        <button className="btn btn-secondary" onClick={exportTokens}>
+        <button className="btn btn-secondary" onClick={exportTokens} disabled={tokens.length === 0}>
           <Download size={16} />
-          Export JSON
+          {downloadStatus || 'Export JSON'}
         </button>
         
         <button className="btn btn-secondary" onClick={generateRandomText}>

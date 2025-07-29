@@ -43,9 +43,9 @@ const Transformer = () => {
   const [showAttention, setShowAttention] = useState(true);
   const [showResidual, setShowResidual] = useState(true);
 
-  const animationRef = useRef<number>();
-  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
-  const dimensionsRef = useRef<ChartDimensions>();
+  const animationRef = useRef<number | null>(null);
+  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
+  const dimensionsRef = useRef<ChartDimensions | null>(null);
 
   // Initialize transformer architecture
   const initializeArchitecture = () => {

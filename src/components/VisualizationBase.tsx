@@ -308,18 +308,26 @@ const VisualizationBase: React.FC<VisualizationBaseProps> = ({
         }
 
         /* Responsive adjustments */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .visualization-content {
             flex-direction: column;
           }
-          
+
           .stats-panel {
             min-width: auto;
             width: 100%;
+            order: -1;
           }
 
           .stats-grid {
             display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .stats-grid {
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 0.75rem;
           }
@@ -331,7 +339,11 @@ const VisualizationBase: React.FC<VisualizationBaseProps> = ({
 
         @media (max-width: 480px) {
           .stats-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .chart-container {
+            padding: 0.5rem;
           }
         }
       `}</style>

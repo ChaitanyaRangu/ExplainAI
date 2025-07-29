@@ -36,9 +36,9 @@ const Attention = () => {
   const [animationStep, setAnimationStep] = useState(0);
   const [attentionType, setAttentionType] = useState<'self' | 'cross'>('self');
 
-  const animationRef = useRef<number>();
-  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
-  const dimensionsRef = useRef<ChartDimensions>();
+  const animationRef = useRef<number | null>(null);
+  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
+  const dimensionsRef = useRef<ChartDimensions | null>(null);
 
   // Tokenize input text
   const tokenizeText = (text: string): Token[] => {

@@ -35,9 +35,9 @@ const KMeans = () => {
   const [converged, setConverged] = useState(false);
   const [initMethod, setInitMethod] = useState<'random' | 'kmeans++'>('random');
 
-  const animationRef = useRef<number>();
-  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
-  const dimensionsRef = useRef<ChartDimensions>();
+  const animationRef = useRef<number | null>(null);
+  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
+  const dimensionsRef = useRef<ChartDimensions | null>(null);
 
   // Generate initial random data
   const generateRandomData = (count: number = 50) => {

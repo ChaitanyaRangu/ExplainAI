@@ -44,9 +44,9 @@ const DecisionTree = () => {
   const [selectedPoint, setSelectedPoint] = useState<DataPoint | null>(null);
   const [predictionPath, setPredictionPath] = useState<string[]>([]);
 
-  const animationRef = useRef<number>();
-  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
-  const dimensionsRef = useRef<ChartDimensions>();
+  const animationRef = useRef<number | null>(null);
+  const svgRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
+  const dimensionsRef = useRef<ChartDimensions | null>(null);
 
   // Generate sample data
   const generateData = () => {
