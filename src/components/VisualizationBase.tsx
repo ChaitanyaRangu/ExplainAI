@@ -1,7 +1,33 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import * as d3 from 'd3';
-import { ChartDimensions, createChartDimensions, Margin } from '../utils/d3-helpers';
+
+interface Margin {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+interface ChartDimensions {
+  width: number;
+  height: number;
+  margin: Margin;
+  innerWidth: number;
+  innerHeight: number;
+}
+
+const createChartDimensions = (
+  width: number,
+  height: number,
+  margin: Margin = { top: 20, right: 20, bottom: 40, left: 40 }
+): ChartDimensions => ({
+  width,
+  height,
+  margin,
+  innerWidth: width - margin.left - margin.right,
+  innerHeight: height - margin.top - margin.bottom,
+});
 
 interface VisualizationBaseProps {
   title: string;
@@ -175,7 +201,7 @@ const VisualizationBase: React.FC<VisualizationBaseProps> = ({
         )}
       </motion.div>
 
-      <style jsx>{`
+      <style>{`
         .visualization-content {
           display: flex;
           gap: 2rem;

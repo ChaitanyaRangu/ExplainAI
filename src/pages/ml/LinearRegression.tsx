@@ -320,7 +320,7 @@ const LinearRegression = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .visualization-content {
           display: flex;
           gap: 2rem;

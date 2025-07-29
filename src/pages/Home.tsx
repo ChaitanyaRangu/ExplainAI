@@ -214,7 +214,7 @@ const Home = () => {
         </motion.div>
       </motion.section>
 
-      <style jsx>{`
+      <style>{`
         .home {
           min-height: 100vh;
         }

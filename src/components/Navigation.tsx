@@ -148,7 +148,7 @@ const Navigation = () => {
         )}
       </AnimatePresence>
 
-      <style jsx>{`
+      <style>{`
         .navigation {
           background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);

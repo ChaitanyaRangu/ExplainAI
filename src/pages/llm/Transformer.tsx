@@ -3,7 +3,15 @@ import { motion } from 'framer-motion';
 import * as d3 from 'd3';
 import { Play, Pause, RotateCcw, Layers, ArrowRight, Zap, Settings } from 'lucide-react';
 import VisualizationBase from '../../components/VisualizationBase';
-import { colorSchemes, ChartDimensions } from '../../utils/d3-helpers';
+import { colorSchemes } from '../../utils/d3-helpers';
+
+interface ChartDimensions {
+  width: number;
+  height: number;
+  margin: { top: number; right: number; bottom: number; left: number };
+  innerWidth: number;
+  innerHeight: number;
+}
 
 interface TransformerLayer {
   id: string;
@@ -570,7 +578,7 @@ const Transformer = () => {
       width={1000}
       height={800}
     >
-      <style jsx>{`
+      <style>{`
         .text-input {
           width: 100%;
           padding: 0.75rem;

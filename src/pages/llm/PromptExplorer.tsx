@@ -3,7 +3,15 @@ import { motion } from 'framer-motion';
 import * as d3 from 'd3';
 import { MessageSquare, Play, Copy, RotateCcw, Zap, Target, TrendingUp, Shuffle } from 'lucide-react';
 import VisualizationBase from '../../components/VisualizationBase';
-import { colorSchemes, ChartDimensions } from '../../utils/d3-helpers';
+import { colorSchemes } from '../../utils/d3-helpers';
+
+interface ChartDimensions {
+  width: number;
+  height: number;
+  margin: { top: number; right: number; bottom: number; left: number };
+  innerWidth: number;
+  innerHeight: number;
+}
 
 interface PromptVariant {
   id: string;
@@ -548,7 +556,7 @@ const PromptExplorer = () => {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .text-input {
           width: 100%;
           min-height: 80px;

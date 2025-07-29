@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Type, Copy, RotateCcw, Download, Upload, Shuffle } from 'lucide-react';
+import { Type, Copy, RotateCcw, Download, Shuffle } from 'lucide-react';
 import VisualizationBase from '../../components/VisualizationBase';
 
 interface TokenInfo {
@@ -16,154 +16,113 @@ const Tokenization = () => {
   const [showTokenIds, setShowTokenIds] = useState(true);
   const [showFrequencies, setShowFrequencies] = useState(false);
   const [animateTokens, setAnimateTokens] = useState(true);
+  const [tokens, setTokens] = useState<TokenInfo[]>([]);
+  const [vocabulary, setVocabulary] = useState<Map<string, number>>(new Map());
+  const [selectedToken, setSelectedToken] = useState<number | null>(null);
 
-  // Enhanced tokenization methods with type information
-  const tokenizeText = (text: string, method: string): TokenInfo[] => {
-    let rawTokens: string[] = [];
-
-    switch (method) {
-      case 'word':
-        rawTokens = text.split(/(\s+|[^\w\s])/).filter(token => token.trim().length > 0);
-        break;
-      case 'char':
-        rawTokens = text.split('');
-        break;
-      case 'subword':
-        // Enhanced BPE-like tokenization
-        const words = text.split(/(\s+|[^\w\s])/);
-        rawTokens = [];
-        words.forEach(word => {
-          if (/^\s+$/.test(word)) {
-            // Skip whitespace
-            return;
-          } else if (/^[^\w\s]$/.test(word)) {
-            // Punctuation
-            rawTokens.push(word);
-          } else if (word.length <= 4) {
-            rawTokens.push(word.toLowerCase());
-          } else {
-            // Split longer words into subwords with common prefixes/suffixes
-            const commonPrefixes = ['un', 're', 'pre', 'dis', 'over', 'under'];
-            const commonSuffixes = ['ing', 'ed', 'er', 'est', 'ly', 'tion', 'ness'];
-
-            let remaining = word.toLowerCase();
-
-            // Check for prefixes
-            for (const prefix of commonPrefixes) {
-              if (remaining.startsWith(prefix) && remaining.length > prefix.length + 2) {
-                rawTokens.push(prefix);
-                remaining = remaining.slice(prefix.length);
-                break;
-              }
-            }
-
-            // Check for suffixes
-            for (const suffix of commonSuffixes) {
-              if (remaining.endsWith(suffix) && remaining.length > suffix.length + 2) {
-                const root = remaining.slice(0, -suffix.length);
-                if (root.length >= 2) {
-                  rawTokens.push(root);
-                  rawTokens.push(suffix);
-                  remaining = '';
-                  break;
-                }
-              }
-            }
-
-            // If no prefix/suffix found, split into chunks
-            if (remaining.length > 0) {
-              for (let i = 0; i < remaining.length; i += 3) {
-                const chunk = remaining.slice(i, i + 3);
-                if (chunk.length > 0) {
-                  rawTokens.push(chunk);
-                }
-              }
-            }
-          }
-        });
-        break;
-      default:
-        rawTokens = [];
-    }
-
-    // Count frequencies and assign types
-    const tokenCounts = new Map<string, number>();
-    rawTokens.forEach(token => {
-      tokenCounts.set(token, (tokenCounts.get(token) || 0) + 1);
+  const tokenizeWord = (text: string): TokenInfo[] => {
+    const words = text.split(/(\s+|[^\w\s])/g).filter(token => token.trim() !== '');
+    const tokenMap = new Map<string, number>();
+    
+    words.forEach(word => {
+      tokenMap.set(word, (tokenMap.get(word) || 0) + 1);
     });
-
-    // Create TokenInfo objects
-    const tokenInfos: TokenInfo[] = [];
-    const uniqueTokens = Array.from(tokenCounts.keys());
-
-    rawTokens.forEach((token, index) => {
-      const frequency = tokenCounts.get(token) || 1;
-      let type: TokenInfo['type'] = 'word';
-
-      if (/^[^\w\s]$/.test(token)) {
-        type = 'punctuation';
-      } else if (token.length === 1 && method === 'char') {
-        type = /\w/.test(token) ? 'word' : 'punctuation';
-      } else if (['ing', 'ed', 'er', 'est', 'ly', 'tion', 'ness', 'un', 're', 'pre', 'dis'].includes(token)) {
-        type = 'subword';
-      }
-
-      tokenInfos.push({
-        text: token,
-        id: uniqueTokens.indexOf(token),
-        frequency,
-        type
-      });
-    });
-
-    return tokenInfos;
+    
+    return words.map((word, index) => ({
+      text: word,
+      id: index,
+      frequency: tokenMap.get(word) || 1,
+      type: /^\w+$/.test(word) ? 'word' : 
+            /^[^\w\s]$/.test(word) ? 'punctuation' : 'special'
+    }));
   };
 
-  const tokens = tokenizeText(inputText, tokenizationMethod);
+  const tokenizeSubword = (text: string): TokenInfo[] => {
+    const words = text.toLowerCase().split(/\s+/);
+    const tokens: TokenInfo[] = [];
+    let tokenId = 0;
+    
+    words.forEach(word => {
+      if (word.length <= 3) {
+        tokens.push({
+          text: word,
+          id: tokenId++,
+          frequency: Math.floor(Math.random() * 10) + 1,
+          type: 'word'
+        });
+      } else {
+        for (let i = 0; i < word.length; i += 3) {
+          const chunk = word.slice(i, i + 3);
+          tokens.push({
+            text: chunk,
+            id: tokenId++,
+            frequency: Math.floor(Math.random() * 5) + 1,
+            type: 'subword'
+          });
+        }
+      }
+    });
+    
+    return tokens;
+  };
 
-  // Create vocabulary mapping
-  const vocabulary = Array.from(new Set(tokens.map(t => t.text)));
-  const tokenToId = Object.fromEntries(vocabulary.map((token, index) => [token, index]));
+  const tokenizeChar = (text: string): TokenInfo[] => {
+    return Array.from(text).map((char, index) => ({
+      text: char,
+      id: index,
+      frequency: Math.floor(Math.random() * 20) + 1,
+      type: /\w/.test(char) ? 'word' : 
+            /\s/.test(char) ? 'special' : 'punctuation'
+    }));
+  };
 
-  // Get token type colors
-  const getTokenColor = (type: TokenInfo['type']) => {
-    switch (type) {
+  const tokenize = () => {
+    let newTokens: TokenInfo[] = [];
+    
+    switch (tokenizationMethod) {
+      case 'word':
+        newTokens = tokenizeWord(inputText);
+        break;
+      case 'subword':
+        newTokens = tokenizeSubword(inputText);
+        break;
+      case 'char':
+        newTokens = tokenizeChar(inputText);
+        break;
+    }
+    
+    setTokens(newTokens);
+    
+    const vocab = new Map<string, number>();
+    newTokens.forEach(token => {
+      vocab.set(token.text, (vocab.get(token.text) || 0) + 1);
+    });
+    setVocabulary(vocab);
+  };
+
+  const getTokenColor = (token: TokenInfo): string => {
+    switch (token.type) {
       case 'word': return '#667eea';
       case 'subword': return '#4ecdc4';
       case 'punctuation': return '#ff6b6b';
       case 'special': return '#feca57';
-      default: return '#999';
+      default: return '#95a5a6';
     }
   };
 
-  const resetText = () => {
-    setInputText("Hello, world! How are you today? Machine learning is fascinating!");
+  const copyToClipboard = (content: string) => {
+    navigator.clipboard.writeText(content);
   };
 
-  const copyTokens = () => {
-    const tokenData = {
-      tokens: tokens.map(t => t.text),
-      vocabulary: vocabulary,
-      tokenIds: tokens.map(t => tokenToId[t.text]),
-      method: tokenizationMethod
-    };
-    navigator.clipboard.writeText(JSON.stringify(tokenData, null, 2));
-  };
-
-  const downloadTokens = () => {
-    const tokenData = {
-      originalText: inputText,
+  const exportTokens = () => {
+    const data = {
+      input: inputText,
       method: tokenizationMethod,
       tokens: tokens,
-      vocabulary: vocabulary,
-      statistics: {
-        totalTokens: tokens.length,
-        uniqueTokens: vocabulary.length,
-        compressionRatio: inputText.length / tokens.length
-      }
+      vocabulary: Array.from(vocabulary.entries())
     };
-
-    const blob = new Blob([JSON.stringify(tokenData, null, 2)], { type: 'application/json' });
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -172,28 +131,46 @@ const Tokenization = () => {
     URL.revokeObjectURL(url);
   };
 
-  const shuffleText = () => {
-    const examples = [
-      "The quick brown fox jumps over the lazy dog.",
-      "Machine learning is transforming artificial intelligence rapidly.",
-      "Natural language processing enables computers to understand human language.",
-      "Tokenization is the first step in text preprocessing pipelines.",
-      "Deep learning models require large amounts of training data.",
-      "Transformers revolutionized the field of natural language processing.",
-      "Attention mechanisms help models focus on relevant information.",
-      "Pre-trained language models can be fine-tuned for specific tasks."
-    ];
-    const randomExample = examples[Math.floor(Math.random() * examples.length)];
-    setInputText(randomExample);
+  const reset = () => {
+    setInputText("Hello, world! How are you today? Machine learning is fascinating!");
+    setTokenizationMethod('subword');
+    setSelectedToken(null);
   };
+
+  const generateRandomText = () => {
+    const samples = [
+      "The quick brown fox jumps over the lazy dog.",
+      "Artificial intelligence is transforming our world rapidly.",
+      "Natural language processing enables machines to understand human language.",
+      "Deep learning models require large amounts of training data.",
+      "Transformers have revolutionized the field of machine learning.",
+      "Tokenization is a crucial preprocessing step in NLP pipelines."
+    ];
+    setInputText(samples[Math.floor(Math.random() * samples.length)]);
+  };
+
+  useEffect(() => {
+    tokenize();
+  }, [inputText, tokenizationMethod]);
 
   const controls = (
     <>
       <div className="controls-grid">
         <div className="control-group">
+          <label>Input Text</label>
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            className="text-input"
+            rows={3}
+            placeholder="Enter text to tokenize..."
+          />
+        </div>
+        
+        <div className="control-group">
           <label>Tokenization Method</label>
-          <select
-            value={tokenizationMethod}
+          <select 
+            value={tokenizationMethod} 
             onChange={(e) => setTokenizationMethod(e.target.value as any)}
             className="select-input"
           >
@@ -202,7 +179,7 @@ const Tokenization = () => {
             <option value="char">Character-level</option>
           </select>
         </div>
-
+        
         <div className="control-group">
           <label>Display Options</label>
           <div className="checkbox-group">
@@ -235,24 +212,32 @@ const Tokenization = () => {
       </div>
 
       <div className="button-group">
-        <button className="btn btn-secondary" onClick={resetText}>
+        <button className="btn btn-primary" onClick={tokenize}>
+          <Type size={16} />
+          Tokenize
+        </button>
+        
+        <button 
+          className="btn btn-secondary" 
+          onClick={() => copyToClipboard(tokens.map(t => t.text).join(' | '))}
+        >
+          <Copy size={16} />
+          Copy Tokens
+        </button>
+        
+        <button className="btn btn-secondary" onClick={exportTokens}>
+          <Download size={16} />
+          Export JSON
+        </button>
+        
+        <button className="btn btn-secondary" onClick={generateRandomText}>
+          <Shuffle size={16} />
+          Random Text
+        </button>
+        
+        <button className="btn btn-secondary" onClick={reset}>
           <RotateCcw size={16} />
           Reset
-        </button>
-
-        <button className="btn btn-secondary" onClick={shuffleText}>
-          <Shuffle size={16} />
-          Random Example
-        </button>
-
-        <button className="btn btn-primary" onClick={copyTokens}>
-          <Copy size={16} />
-          Copy Data
-        </button>
-
-        <button className="btn btn-primary" onClick={downloadTokens}>
-          <Download size={16} />
-          Download JSON
         </button>
       </div>
     </>
@@ -260,124 +245,62 @@ const Tokenization = () => {
 
   const stats = [
     { label: 'Total Tokens', value: tokens.length, icon: <Type size={16} /> },
-    { label: 'Unique Tokens', value: vocabulary.length, icon: <Type size={16} /> },
-    { label: 'Characters', value: inputText.length, icon: <Type size={16} /> },
-    { label: 'Compression Ratio', value: (inputText.length / tokens.length).toFixed(2), icon: <Type size={16} /> }
+    { label: 'Unique Tokens', value: vocabulary.size, icon: <Type size={16} /> },
+    { label: 'Method', value: tokenizationMethod, icon: <Type size={16} /> },
+    { label: 'Avg Token Length', value: tokens.length > 0 ? (tokens.reduce((sum, t) => sum + t.text.length, 0) / tokens.length).toFixed(1) : '0', icon: <Type size={16} /> }
   ];
 
   return (
     <VisualizationBase
       title="Tokenization Visualizer"
-      description="See how text is broken down into tokens for language models"
+      description="Explore different tokenization methods and see how text is broken down into tokens"
       controls={controls}
       stats={stats}
+      onVisualizationReady={() => {}}
       width={800}
       height={600}
     >
       <div className="tokenization-content">
-        <div className="input-section">
-          <h3>Input Text</h3>
-          <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Enter your text here..."
-            className="text-input"
-            rows={4}
-          />
-        </div>
-
-        <motion.div
-          className="tokens-section"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="tokens-display">
           <h3>Tokens ({tokens.length})</h3>
-          <div className="tokens-container">
+          <div className="tokens-grid">
             {tokens.map((token, index) => (
               <motion.div
-                key={`${token.text}-${index}`}
-                className={`token token-${token.type}`}
+                key={`${token.id}-${index}`}
+                className={`token ${selectedToken === index ? 'selected' : ''}`}
+                style={{ backgroundColor: getTokenColor(token) }}
                 initial={animateTokens ? { opacity: 0, scale: 0.8 } : {}}
                 animate={animateTokens ? { opacity: 1, scale: 1 } : {}}
-                transition={animateTokens ? { delay: index * 0.02, duration: 0.3 } : {}}
+                transition={animateTokens ? { delay: index * 0.05, duration: 0.3 } : {}}
+                onClick={() => setSelectedToken(selectedToken === index ? null : index)}
                 whileHover={{ scale: 1.05 }}
-                style={{ backgroundColor: getTokenColor(token.type) }}
-                title={`Type: ${token.type}, Frequency: ${token.frequency}`}
+                whileTap={{ scale: 0.95 }}
               >
-                <span className="token-text">{token.text}</span>
-                {showTokenIds && (
-                  <span className="token-id">{tokenToId[token.text]}</span>
-                )}
-                {showFrequencies && (
-                  <span className="token-frequency">×{token.frequency}</span>
-                )}
+                <div className="token-text">{token.text}</div>
+                {showTokenIds && <div className="token-id">ID: {token.id}</div>}
+                {showFrequencies && <div className="token-freq">Freq: {token.frequency}</div>}
+                <div className="token-type">{token.type}</div>
               </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        <div className="legend-section">
-          <h3>Token Types</h3>
-          <div className="legend-container">
-            <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: getTokenColor('word') }}></div>
-              <span>Word</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: getTokenColor('subword') }}></div>
-              <span>Subword</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: getTokenColor('punctuation') }}></div>
-              <span>Punctuation</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: getTokenColor('special') }}></div>
-              <span>Special</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="vocabulary-section">
-          <h3>Vocabulary ({vocabulary.length} unique tokens)</h3>
-          <div className="vocabulary-container">
-            {vocabulary.map((token, index) => (
-              <div key={index} className="vocab-item">
-                <span className="vocab-token">{token}</span>
-                <span className="vocab-id">{index}</span>
-              </div>
             ))}
           </div>
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .tokenization-content {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-          width: 100%;
-        }
-
-        .input-section h3,
-        .tokens-section h3,
-        .legend-section h3,
-        .vocabulary-section h3 {
-          margin-bottom: 1rem;
-          color: #333;
-          font-size: 1.3rem;
+          padding: 1rem;
+          max-width: 100%;
         }
 
         .text-input {
           width: 100%;
-          min-height: 100px;
+          min-height: 80px;
           resize: vertical;
-          padding: 1rem;
+          padding: 0.75rem;
           border: 2px solid #e9ecef;
           border-radius: 8px;
-          font-family: 'Courier New', monospace;
           font-size: 0.9rem;
+          font-family: 'Courier New', monospace;
         }
 
         .select-input {
@@ -403,124 +326,59 @@ const Tokenization = () => {
           cursor: pointer;
         }
 
-        .tokens-container {
+        .tokens-display {
+          margin-bottom: 2rem;
+        }
+
+        .tokens-display h3 {
+          margin-bottom: 1rem;
+          color: #333;
+        }
+
+        .tokens-grid {
           display: flex;
           flex-wrap: wrap;
           gap: 0.5rem;
-          padding: 1rem;
-          background: #f8f9fa;
-          border-radius: 12px;
-          min-height: 100px;
-          max-height: 300px;
-          overflow-y: auto;
+          margin-bottom: 1rem;
         }
 
         .token {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          color: white;
           padding: 0.5rem 0.75rem;
           border-radius: 8px;
-          font-size: 0.9rem;
+          color: white;
+          font-weight: bold;
           cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          position: relative;
+          transition: all 0.2s ease;
+          min-width: 60px;
+          text-align: center;
+          border: 2px solid transparent;
         }
 
-        .token:hover {
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        .token.selected {
+          border-color: #ffd700;
+          box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
         }
 
         .token-text {
-          font-weight: 600;
+          font-size: 0.9rem;
           margin-bottom: 0.25rem;
-          font-family: 'Courier New', monospace;
         }
 
-        .token-id, .token-frequency {
+        .token-id, .token-freq {
           font-size: 0.7rem;
-          opacity: 0.9;
-          background: rgba(255, 255, 255, 0.2);
-          padding: 0.1rem 0.3rem;
-          border-radius: 4px;
-          margin-top: 0.1rem;
+          opacity: 0.8;
         }
 
-        .legend-section {
-          margin: 1rem 0;
-        }
-
-        .legend-container {
-          display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem;
-          background: #f8f9fa;
-          border-radius: 6px;
-          border: 1px solid #e9ecef;
-        }
-
-        .legend-color {
-          width: 16px;
-          height: 16px;
-          border-radius: 4px;
-          border: 1px solid #ccc;
-        }
-
-        .vocabulary-container {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-          gap: 0.5rem;
-          max-height: 300px;
-          overflow-y: auto;
-          padding: 1rem;
-          background: #f8f9fa;
-          border-radius: 12px;
-        }
-
-        .vocab-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.5rem;
-          background: white;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          border: 1px solid #e9ecef;
-        }
-
-        .vocab-token {
-          font-weight: 600;
-          color: #333;
-          font-family: 'Courier New', monospace;
-        }
-
-        .vocab-id {
-          color: #667eea;
-          font-weight: 600;
+        .token-type {
+          font-size: 0.6rem;
+          opacity: 0.7;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         @media (max-width: 768px) {
-          .tokens-container {
-            padding: 0.5rem;
-          }
-
-          .token {
-            padding: 0.4rem 0.6rem;
-            font-size: 0.8rem;
-          }
-
-          .legend-container {
-            flex-direction: column;
-            gap: 0.5rem;
+          .tokens-grid {
+            justify-content: center;
           }
         }
       `}</style>

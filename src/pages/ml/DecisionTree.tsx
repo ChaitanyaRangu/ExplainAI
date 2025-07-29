@@ -3,7 +3,15 @@ import { motion } from 'framer-motion';
 import * as d3 from 'd3';
 import { Play, Pause, RotateCcw, GitBranch, Target, Shuffle, Plus } from 'lucide-react';
 import VisualizationBase from '../../components/VisualizationBase';
-import { colorSchemes, ChartDimensions } from '../../utils/d3-helpers';
+import { colorSchemes } from '../../utils/d3-helpers';
+
+interface ChartDimensions {
+  width: number;
+  height: number;
+  margin: { top: number; right: number; bottom: number; left: number };
+  innerWidth: number;
+  innerHeight: number;
+}
 
 interface DataPoint {
   x: number;

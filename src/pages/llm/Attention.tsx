@@ -3,7 +3,14 @@ import { motion } from 'framer-motion';
 import * as d3 from 'd3';
 import { Eye, Play, Pause, RotateCcw, Layers, Target, Shuffle } from 'lucide-react';
 import VisualizationBase from '../../components/VisualizationBase';
-import { ChartDimensions } from '../../utils/d3-helpers';
+
+interface ChartDimensions {
+  width: number;
+  height: number;
+  margin: { top: number; right: number; bottom: number; left: number };
+  innerWidth: number;
+  innerHeight: number;
+}
 
 interface AttentionWeight {
   from: number;
@@ -482,7 +489,7 @@ const Attention = () => {
       width={900}
       height={700}
     >
-      <style jsx>{`
+      <style>{`
         .text-input {
           width: 100%;
           padding: 0.75rem;
