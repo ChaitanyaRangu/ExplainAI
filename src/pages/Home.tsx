@@ -1,3 +1,4 @@
+import React, { useState, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
@@ -15,6 +16,20 @@ import {
 } from 'lucide-react';
 
 const Home = () => {
+  // Mode state
+  const [mode, setMode] = useState<'explain' | 'read'>('explain');
+  // Split screen state
+  const [compare, setCompare] = useState(false);
+  const [selectedModel1, setSelectedModel1] = useState<string>('');
+  const [selectedModel2, setSelectedModel2] = useState<string>('');
+  // Which pane is active when assigning models in compare mode (1 = left/main, 2 = right)
+  const [activePane, setActivePane] = useState<1 | 2>(1);
+  // Search state
+  const [search, setSearch] = useState('');
+  // Per-model mode overrides (allows toggling read/explain per selected model)
+  const [perModelMode, setPerModelMode] = useState<Record<string, 'explain' | 'read'>>({});
+  // Lazy-loaded visualization components map
+  // ...componentMap and renderFeatureContent will be defined below after feature arrays
   const mlFeatures = [
     {
       icon: TrendingUp,
@@ -77,6 +92,49 @@ const Home = () => {
     }
   ];
 
+  // Lazy-loaded visualization components map
+  const componentMap: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
+    '/ml/linear-regression': lazy(() => import('./ml/LinearRegression')),
+    '/ml/decision-tree': lazy(() => import('./ml/DecisionTree')),
+    '/ml/k-means': lazy(() => import('./ml/KMeans')),
+    '/ml/neural-network': lazy(() => import('./ml/NeuralNetwork')),
+    '/llm/attention': lazy(() => import('./llm/Attention')),
+    '/llm/prompt-explorer': lazy(() => import('./llm/PromptExplorer')),
+    '/llm/tokenization': lazy(() => import('./llm/Tokenization')),
+    '/llm/transformer': lazy(() => import('./llm/Transformer')),
+  };
+
+  const allFeatures = [...mlFeatures, ...llmFeatures];
+
+  const renderFeatureContent = (path?: string, overrideMode?: 'explain' | 'read') => {
+    if (!path) return <div style={{ color: '#666' }}>No model selected</div>;
+    const feature = allFeatures.find(f => f.path === path);
+    const Comp = componentMap[path];
+    const effectiveMode = overrideMode || mode;
+
+    if (effectiveMode === 'read') {
+      return (
+        <div style={{ padding: '1rem' }}>
+          <h3 style={{ marginTop: 0 }}>{feature?.title}</h3>
+          <p style={{ color: '#333' }}>{feature?.description}</p>
+          <p style={{ color: '#444' }}>This read mode provides a clear textual explanation and examples for beginners. You can expand this content per model to include intuition, math, and step-by-step walkthroughs.</p>
+        </div>
+      );
+    }
+
+    if (Comp) {
+      return (
+        <Suspense fallback={<div style={{ padding: '1rem' }}>Loading visualization...</div>}>
+          <div style={{ height: 400, overflow: 'auto' }}>
+            <Comp />
+          </div>
+        </Suspense>
+      );
+    }
+
+    return <div style={{ color: '#666' }}>Visualization not available for this model yet.</div>;
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -99,120 +157,162 @@ const Home = () => {
   };
 
   return (
-    <div className="home">
-      <motion.div 
-        className="hero-section"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="hero-content">
-          <motion.div
-            className="hero-icon"
-            animate={{ 
-              rotate: [0, 5, -5, 0],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{ 
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          >
-            <Brain size={80} />
-            <Sparkles className="sparkle-1" size={20} />
-            <Sparkles className="sparkle-2" size={16} />
-          </motion.div>
-          
-          <h1 className="hero-title">
-            Welcome to <span className="gradient-text">ExplainAI</span>
-          </h1>
-          
-          <p className="hero-description">
-            Interactive visualizations to understand Machine Learning and Large Language Models. 
-            Learn complex AI concepts through hands-on exploration and real-time animations.
-          </p>
-          
-          <div className="hero-stats">
-            <div className="stat">
-              <span className="stat-number">8</span>
-              <span className="stat-label">Interactive Demos</span>
-            </div>
-            <div className="stat">
-              <span className="stat-number">2</span>
-              <span className="stat-label">AI Categories</span>
-            </div>
-            <div className="stat">
-              <span className="stat-number">∞</span>
-              <span className="stat-label">Learning Possibilities</span>
-            </div>
+    <div className="home" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #071032 0%, #081726 50%, #0b1222 100%)', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }}>
+
+      {/* Header (reintroduced) */}
+      <header style={{ width: '100%', padding: '1rem 1.5rem', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Brain size={32} color="#ffd700" />
+          <h1 style={{ margin: 0, color: '#fff', fontSize: 20 }}>ExplainAI</h1>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search models..."
+            style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)', color: '#fff' }}
+          />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => setMode('explain')} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, background: mode === 'explain' ? '#667eea' : 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.08)' }}>Explain</button>
+            <button onClick={() => setMode('read')} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, background: mode === 'read' ? '#667eea' : 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.08)' }}>Read</button>
+            <button onClick={() => setCompare(c => !c)} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, background: compare ? '#ffd700' : 'transparent', color: '#111', border: '1px solid rgba(255,255,255,0.08)' }}>{compare ? 'Compare ON' : 'Compare'}</button>
           </div>
         </div>
-      </motion.div>
+      </header>
 
-      <motion.section 
-        className="features-section"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div className="section-header" variants={itemVariants}>
-          <h2>Traditional Machine Learning</h2>
-          <p>Explore fundamental ML algorithms with interactive visualizations</p>
-        </motion.div>
-        
-        <motion.div className="features-grid" variants={containerVariants}>
-          {mlFeatures.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <motion.div key={index} variants={itemVariants}>
-                <Link to={feature.path} className="feature-card">
-                  <div className="feature-icon" style={{ backgroundColor: feature.color }}>
-                    <Icon size={24} />
-                  </div>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                  <div className="feature-arrow">
-                    <ArrowRight size={16} />
-                  </div>
-                </Link>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </motion.section>
+      {/* Responsive container: sidebar (model list) on large screens, stacked on small */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, margin: '1rem auto', maxWidth: 1400, padding: '0 1rem', boxSizing: 'border-box', flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: 20 }}>
+          {/* Sidebar: becomes fixed-width column on large screens */}
+          <aside style={{ flex: '0 0 320px', minWidth: 220, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(6px)', borderRadius: 12, padding: 16, boxShadow: '0 8px 30px rgba(2,6,23,0.6)', color: '#fff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontWeight: 700 }}>Models</div>
+              {compare && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button onClick={() => setActivePane(1)} style={{ padding: '6px 8px', borderRadius: 6, border: activePane === 1 ? '2px solid #667eea' : '1px solid #eee', background: activePane === 1 ? '#eef2ff' : '#fff' }}>Left</button>
+                  <button onClick={() => setActivePane(2)} style={{ padding: '6px 8px', borderRadius: 6, border: activePane === 2 ? '2px solid #667eea' : '1px solid #eee', background: activePane === 2 ? '#eef2ff' : '#fff' }}>Right</button>
+                </div>
+              )}
+            </div>
 
-      <motion.section 
-        className="features-section"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div className="section-header" variants={itemVariants}>
-          <h2>Large Language Models</h2>
-          <p>Dive deep into the mechanics of modern language AI</p>
-        </motion.div>
-        
-        <motion.div className="features-grid" variants={containerVariants}>
-          {llmFeatures.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <motion.div key={index} variants={itemVariants}>
-                <Link to={feature.path} className="feature-card">
-                  <div className="feature-icon" style={{ backgroundColor: feature.color }}>
-                    <Icon size={24} />
+            {/* Mode toggle moved into sidebar for compact layout */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <button
+                onClick={() => setMode('explain')}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: 8, background: mode === 'explain' ? '#667eea' : '#f3f4f6', color: mode === 'explain' ? '#fff' : '#333', border: 'none', fontWeight: 600 }}
+              >Explain</button>
+              <button
+                onClick={() => setMode('read')}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: 8, background: mode === 'read' ? '#667eea' : '#f3f4f6', color: mode === 'read' ? '#fff' : '#333', border: 'none', fontWeight: 600 }}
+              >Read</button>
+              <button
+                onClick={() => setCompare(c => !c)}
+                style={{ padding: '0.5rem', borderRadius: 8, background: compare ? '#ffd700' : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.04)', color: compare ? '#111' : '#fff', fontWeight: 600 }}
+              >{compare ? 'Compare ON' : 'Compare'}</button>
+            </div>
+
+            {/* Search inside sidebar to filter models */}
+            <div style={{ marginBottom: 12 }}>
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Filter models..."
+                style={{ width: '100%', padding: '0.5rem', borderRadius: 8, border: '1px solid #eee' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '60vh', overflow: 'auto', paddingRight: 4 }}>
+              <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>Machine Learning</div>
+              {[...mlFeatures].filter(f => f.title.toLowerCase().includes(search.toLowerCase())).map(feature => {
+                const isSelected = selectedModel1 === feature.path || selectedModel2 === feature.path;
+                return (
+                <div key={feature.path} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {!isSelected ? (
+                    <button
+                      onClick={() => {
+                        if (compare) {
+                          activePane === 1 ? setSelectedModel1(feature.path) : setSelectedModel2(feature.path);
+                        } else {
+                          setSelectedModel1(feature.path);
+                        }
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontWeight: 600, color: '#fff', width: '100%' }}
+                    >
+                      <span style={{ background: feature.color, borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <feature.icon size={16} />
+                      </span>
+                      <div>{feature.title}</div>
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <div style={{ padding: '6px 10px', borderRadius: 20, background: 'rgba(102,126,234,0.15)', border: '1px solid rgba(102,126,234,0.25)', color: '#fff', fontWeight: 700 }}>{feature.title}</div>
+                      <button onClick={() => setPerModelMode(prev => ({ ...prev, [feature.path]: prev[feature.path] === 'read' ? 'explain' : 'read' }))} style={{ padding: '6px 8px', borderRadius: 8, border: 'none' }}>{perModelMode[feature.path] === 'read' ? 'Read' : 'Explain'}</button>
+                    </div>
+                  )}
+                </div>
+                );
+              })}
+
+              <div style={{ height: 10 }} />
+              <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>Large Language Models</div>
+              {[...llmFeatures].filter(f => f.title.toLowerCase().includes(search.toLowerCase())).map(feature => {
+                const isSelected = selectedModel1 === feature.path || selectedModel2 === feature.path;
+                return (
+                <div key={feature.path} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {!isSelected ? (
+                    <button
+                      onClick={() => {
+                        if (compare) {
+                          activePane === 1 ? setSelectedModel1(feature.path) : setSelectedModel2(feature.path);
+                        } else {
+                          setSelectedModel1(feature.path);
+                        }
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontWeight: 600, color: '#fff', width: '100%' }}
+                    >
+                      <span style={{ background: feature.color, borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <feature.icon size={16} />
+                      </span>
+                      <div>{feature.title}</div>
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <div style={{ padding: '6px 10px', borderRadius: 20, background: 'rgba(102,126,234,0.15)', border: '1px solid rgba(102,126,234,0.25)', color: '#fff', fontWeight: 700 }}>{feature.title}</div>
+                      <button onClick={() => setPerModelMode(prev => ({ ...prev, [feature.path]: prev[feature.path] === 'read' ? 'explain' : 'read' }))} style={{ padding: '6px 8px', borderRadius: 8, border: 'none' }}>{perModelMode[feature.path] === 'read' ? 'Read' : 'Explain'}</button>
+                    </div>
+                  )}
+                </div>
+                );
+              })}
+            </div>
+          </aside>
+
+          {/* Main visualization area */}
+          <main style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', gap: 20, flexDirection: compare ? 'row' : 'column' }}>
+              {!compare && (
+                <div style={{ flex: 1, minHeight: 420, background: 'rgba(255,255,255,0.02)', borderRadius: 12, padding: 16, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)' }}>
+                  {renderFeatureContent(selectedModel1, perModelMode[selectedModel1])}
+                </div>
+              )}
+
+              {compare && (
+                <>
+                  <div style={{ flex: 1, minHeight: 420, background: 'rgba(255,255,255,0.02)', borderRadius: 12, padding: 12, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)' }}>
+                    {renderFeatureContent(selectedModel1, perModelMode[selectedModel1])}
                   </div>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                  <div className="feature-arrow">
-                    <ArrowRight size={16} />
+                  <div style={{ flex: 1, minHeight: 420, background: 'rgba(255,255,255,0.02)', borderRadius: 12, padding: 12, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)' }}>
+                    {renderFeatureContent(selectedModel2, perModelMode[selectedModel2])}
                   </div>
-                </Link>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </motion.section>
+                </>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
 
       <style>{`
         .home {

@@ -520,7 +520,15 @@ const PromptExplorer = () => {
       width={1000}
       height={600}
     >
-      <div className="prompt-details">
+      {/* Controls Section */}
+      <section className="prompt-controls-section">
+        <h2>Prompt Controls</h2>
+        {controls}
+      </section>
+
+      {/* Prompt Details Section */}
+      <section className="prompt-details-section">
+        <h2>Prompt Details</h2>
         {selectedVar && (
           <motion.div
             className="prompt-display"
@@ -532,29 +540,30 @@ const PromptExplorer = () => {
             <div className="prompt-text">
               {selectedVar.text}
             </div>
-
-            {!comparisonMode && (
-              <div className="responses-section">
-                <h4>Top Responses</h4>
-                <div className="responses-list">
-                  {selectedVar.responses.slice(0, 3).map((response, index) => (
-                    <div key={index} className="response-item">
-                      <div className="response-header">
-                        <span className="response-rank">#{index + 1}</span>
-                        <span className="response-prob">{(response.probability * 100).toFixed(1)}%</span>
-                        <span className="response-conf">Conf: {(response.confidence * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="response-text">
-                        {response.text.substring(0, 150)}...
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </motion.div>
         )}
-      </div>
+      </section>
+
+      {/* Responses Section */}
+      {!comparisonMode && selectedVar && (
+        <section className="responses-section">
+          <h2>Top Responses</h2>
+          <div className="responses-list">
+            {selectedVar.responses.slice(0, 3).map((response, index) => (
+              <div key={index} className="response-item">
+                <div className="response-header">
+                  <span className="response-rank">#{index + 1}</span>
+                  <span className="response-prob">{(response.probability * 100).toFixed(1)}%</span>
+                  <span className="response-conf">Conf: {(response.confidence * 100).toFixed(1)}%</span>
+                </div>
+                <div className="response-text">
+                  {response.text.substring(0, 150)}...
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <style>{`
         .text-input {
@@ -573,7 +582,7 @@ const PromptExplorer = () => {
           padding: 0.75rem;
           border: 2px solid #e9ecef;
           border-radius: 8px;
-          font-size: 0.9rem;
+          font-size: 0.9rem
           background: white;
         }
 

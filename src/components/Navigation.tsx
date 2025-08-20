@@ -202,7 +202,6 @@ const Navigation = () => {
 
         .nav-group {
           display: flex;
-          gap: 1rem;
         }
 
         .nav-link {
