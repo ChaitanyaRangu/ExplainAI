@@ -61,19 +61,23 @@ const LinearRegressionFresh: React.FC = () => {
           <p>R² = 1 - SS_res / SS_tot</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 12 }}>
-          <div>
-            <Plot
-              data={[
-                { x: points.map(p => p.x), y: points.map(p => p.y), mode: 'markers', type: 'scatter', marker: { color: '#1f77b4' }, name: 'Data' },
-                { x: line.map(p => p.x), y: line.map(p => p.y), mode: 'lines', type: 'scatter', line: { color: '#ff7f0e' }, name: 'Line' }
-              ]}
-              layout={{ width: '100%', height: 480, margin: { t: 20, l: 40, r: 10, b: 40 }, xaxis: { title: 'X' }, yaxis: { title: 'Y' } }}
-            />
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 360px', gap: 16, alignItems: 'start' }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ height: 540 }}>
+              <Plot
+                data={[
+                  { x: points.map(p => p.x), y: points.map(p => p.y), mode: 'markers', type: 'scatter', marker: { color: '#1f77b4' }, name: 'Data' },
+                  { x: line.map(p => p.x), y: line.map(p => p.y), mode: 'lines', type: 'scatter', line: { color: '#ff7f0e' }, name: 'Line' }
+                ]}
+                useResizeHandler={true}
+                style={{ width: '100%', height: '100%' }}
+                layout={{ autosize: true, height: 540, margin: { t: 20, l: 50, r: 10, b: 40 }, xaxis: { title: 'X' }, yaxis: { title: 'Y' } }}
+              />
+            </div>
 
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: 10 }}>
               <strong>Residuals</strong>
-              <ul>
+              <ul style={{ margin: 0, paddingLeft: 16 }}>
                 {resids.map((r, i) => (
                   <li key={i}>x={r.x}, resid={r.resid.toFixed(2)}</li>
                 ))}
@@ -81,7 +85,7 @@ const LinearRegressionFresh: React.FC = () => {
             </div>
           </div>
 
-          <aside style={{ background: '#fff', padding: 12, borderRadius: 8 }}>
+          <aside style={{ background: '#fff', padding: 16, borderRadius: 8 }}>
             <div style={{ marginBottom: 8 }}>
               <label>Slope (m): {m.toFixed(3)}</label>
               <input type="range" min="-5" max="5" step="0.01" value={m} onChange={e => setM(parseFloat(e.target.value))} />

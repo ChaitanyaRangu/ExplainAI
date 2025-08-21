@@ -94,8 +94,8 @@ const Home = () => {
 
   // Lazy-loaded visualization components map
   const componentMap: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
-    '/ml/linear-regression': lazy(() => import('./ml/LinearRegression')),
-    '/ml/decision-tree': lazy(() => import('./ml/DecisionTree')),
+  '/ml/linear-regression': lazy(() => import('./ml/LinearRegressionFresh')),
+  '/ml/decision-tree': lazy(() => import('./ml/DecisionTreeFresh')),
     '/ml/k-means': lazy(() => import('./ml/KMeans')),
     '/ml/neural-network': lazy(() => import('./ml/NeuralNetwork')),
     '/llm/attention': lazy(() => import('./llm/Attention')),
