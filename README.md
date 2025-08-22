@@ -1,7 +1,7 @@
 # 🧠 ExplainAI - Interactive ML/LLM Visualization Platform
 
-[![Deploy to GitHub Pages](https://github.com/YOUR_USERNAME/ExplainAI/actions/workflows/deploy.yml/badge.svg)](https://github.com/YOUR_USERNAME/ExplainAI/actions/workflows/deploy.yml)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://YOUR_USERNAME.github.io/ExplainAI/)
+[![Deploy to GitHub Pages](https://github.com/ChaitanyaRangu/ExplainAI/actions/workflows/deploy.yml/badge.svg)](https://github.com/ChaitanyaRangu/ExplainAI/actions/workflows/deploy.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://ChaitanyaRangu.github.io/ExplainAI/)
 
 An interactive educational platform that makes Machine Learning and Large Language Model concepts accessible through beautiful, hands-on visualizations. Built with React, TypeScript, and D3.js.
 
