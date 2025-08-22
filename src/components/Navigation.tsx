@@ -31,6 +31,7 @@ const Navigation = () => {
     { path: '/llm/attention', name: 'Attention Maps', icon: Eye },
     { path: '/llm/transformer', name: 'Transformer', icon: Layers },
     { path: '/llm/prompt-explorer', name: 'Prompt Explorer', icon: MessageSquare },
+  { path: '/about', name: 'About / Contact', icon: MessageSquare },
   ];
 
   const isActive = (path: string) => location.pathname === path;

@@ -10,6 +10,7 @@ import Tokenization from './pages/llm/Tokenization';
 import Attention from './pages/llm/Attention';
 import Transformer from './pages/llm/Transformer';
 import PromptExplorer from './pages/llm/PromptExplorer';
+import AboutPage from './pages/About';
 import './App.css';
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
             <Route path="/llm/attention" element={<Attention />} />
             <Route path="/llm/transformer" element={<Transformer />} />
             <Route path="/llm/prompt-explorer" element={<PromptExplorer />} />
+            <Route path="/about" element={<AboutPage />} />
           </Routes>
         </motion.main>
       </div>
