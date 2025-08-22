@@ -21,7 +21,7 @@ An interactive educational platform that makes Machine Learning and Large Langua
 
 ## 🚀 Live Demo
 
-Visit the live application: [https://YOUR_USERNAME.github.io/ExplainAI/](https://YOUR_USERNAME.github.io/ExplainAI/)
+Visit the live application: [https://ChaitanyaRangu.github.io/ExplainAI/](https://ChaitanyaRangu.github.io/ExplainAI/)
 
 ## 🛠️ Tech Stack
 
@@ -36,7 +36,7 @@ Visit the live application: [https://YOUR_USERNAME.github.io/ExplainAI/](https:/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/ExplainAI.git
+git clone https://github.com/ChaitanyaRangu/ExplainAI.git
 cd ExplainAI
 ```
 
@@ -59,7 +59,7 @@ The project is configured with GitHub Actions for automatic deployment to GitHub
 
 1. Push your changes to the `main` branch
 2. GitHub Actions will automatically build and deploy your site
-3. Your site will be available at `https://YOUR_USERNAME.github.io/ExplainAI/`
+3. Your site will be available at `https://ChaitanyaRangu.github.io/ExplainAI/`
 
 ### Manual Deployment
 ```bash
